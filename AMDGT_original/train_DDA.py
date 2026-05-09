@@ -1,4 +1,5 @@
 import timeit
+import os
 import argparse
 import numpy as np
 import pandas as pd
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     cross_entropy = nn.CrossEntropyLoss()
 
     Metric = ('Epoch\t\tTime\t\tAUC\t\tAUPR\t\tAccuracy\t\tPrecision\t\tRecall\t\tF1-score\t\tMcc')
-    AUCs, AUPRs = [], []
+    AUCs, AUPRs, Accs, Precs, Recs, F1s, MCCs, Epochs = [], [], [], [], [], [], [], []
 
     print('Dataset:', args.dataset)
 
@@ -123,16 +124,31 @@ if __name__ == '__main__':
 
         AUCs.append(best_auc)
         AUPRs.append(best_aupr)
+        Accs.append(best_accuracy)
+        Precs.append(best_precision)
+        Recs.append(best_recall)
+        F1s.append(best_f1)
+        MCCs.append(best_mcc)
+        Epochs.append(best_epoch)
 
-    print('AUC:', AUCs)
-    AUC_mean = np.mean(AUCs)
-    AUC_std = np.std(AUCs)
-    print('Mean AUC:', AUC_mean, '(', AUC_std, ')')
-
-    print('AUPR:', AUPRs)
-    AUPR_mean = np.mean(AUPRs)
-    AUPR_std = np.std(AUPRs)
-    print('Mean AUPR:', AUPR_mean, '(', AUPR_std, ')')
+    # Final Results Processing
+    results_df = pd.DataFrame({
+        'Fold': [f'Fold {i}' for i in range(len(AUCs))],
+        'Best_Epoch': Epochs,
+        'AUC': AUCs, 'AUPR': AUPRs, 'Accuracy': Accs, 
+        'Precision': Precs, 'Recall': Recs, 'F1-score': F1s, 'Mcc': MCCs
+    })
+    
+    metrics_only = results_df.drop(columns=['Fold', 'Best_Epoch'])
+    summary_df = pd.DataFrame([['Mean', ''] + metrics_only.mean().tolist(), ['Std', ''] + metrics_only.std().tolist()], columns=results_df.columns)
+    final_df = pd.concat([results_df, summary_df], ignore_index=True)
+    
+    print('\n' + '='*30 + '\nFINAL RESULTS SUMMARY\n' + '='*30)
+    print(final_df.iloc[-2:])
+    
+    csv_path = os.path.join(args.result_dir, '10_fold_results.csv')
+    final_df.to_csv(csv_path, index=False)
+    print(f'\nKết quả 10-fold gốc đã được lưu tại: {csv_path}')
 
 
 

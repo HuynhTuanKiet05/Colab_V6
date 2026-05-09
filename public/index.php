@@ -605,6 +605,7 @@ $compareGraphData = $resultData['graph3d'] ?? ($resultData['graph2d'] ?? ['nodes
                 </div>
             </div>
         </div>
+
     <?php else: ?>
         <div class="glass-card section-spaced" id="quick-start">
             <div class="section-header">
@@ -632,6 +633,7 @@ $compareGraphData = $resultData['graph3d'] ?? ($resultData['graph2d'] ?? ['nodes
             </div>
         </div>
     <?php endif; ?>
+
         </div>
     </div>
 </div>
@@ -946,6 +948,7 @@ $compareGraphData = $resultData['graph3d'] ?? ($resultData['graph2d'] ?? ['nodes
             });
 
             const raycaster = new THREE.Raycaster();
+            raycaster.params.Points = { threshold: 5 };
             const pointer = new THREE.Vector2();
             const escapeHtml = (value) => String(value ?? '')
                 .replace(/&/g, '&amp;')
@@ -959,7 +962,8 @@ $compareGraphData = $resultData['graph3d'] ?? ($resultData['graph2d'] ?? ['nodes
 
             renderer.domElement.addEventListener('pointermove', (event) => {
                 if (!graphTooltip) return;
-                const rect = graphRoot.getBoundingClientRect();
+                const canvas = renderer.domElement;
+                const rect = canvas.getBoundingClientRect();
                 pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
                 pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
                 raycaster.setFromCamera(pointer, camera);
@@ -970,8 +974,9 @@ $compareGraphData = $resultData['graph3d'] ?? ($resultData['graph2d'] ?? ['nodes
                 }
                 const node = hits[0].object.userData || {};
                 graphTooltip.innerHTML = `<strong>${escapeHtml(node.label || node.actual_id || node.id || '')}</strong><span>${escapeHtml(String(node.type || '').toUpperCase())} · ${escapeHtml(node.actual_id || '')}</span>`;
-                graphTooltip.style.left = `${event.clientX - rect.left}px`;
-                graphTooltip.style.top = `${event.clientY - rect.top}px`;
+                const shellRect = graphRoot.closest('.compare-graph-shell').getBoundingClientRect();
+                graphTooltip.style.left = `${event.clientX - shellRect.left}px`;
+                graphTooltip.style.top = `${event.clientY - shellRect.top}px`;
                 graphTooltip.classList.add('show');
             });
 
@@ -1105,5 +1110,6 @@ $compareGraphData = $resultData['graph3d'] ?? ($resultData['graph2d'] ?? ['nodes
     });
 })();
 </script>
+
 </body>
 </html>
